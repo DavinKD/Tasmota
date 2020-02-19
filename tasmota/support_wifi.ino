@@ -286,6 +286,43 @@ void WifiBeginAfterScan(void)
 
     if (wifi_scan_result > 0) {
       // Networks found
+		for (uint32_t i = 0; i < wifi_scan_result; ++i) {
+			String ssid_scan;
+			int32_t rssi_scan;
+			uint8_t sec_scan;
+			uint8_t* bssid_scan;
+			int32_t chan_scan;
+			bool hidden_scan;
+			bool bMatch;
+
+			WiFi.getNetworkInfo(i, ssid_scan, sec_scan, rssi_scan, bssid_scan, chan_scan, hidden_scan);
+
+			bMatch=false;
+			for (uint32_t j = 0; j < MAX_SSIDS; j++) {
+          		if (ssid_scan == SettingsText(SET_STASSID1 + j)) {
+          			bMatch=true;
+          		}
+          	}
+          	if (bMatch){
+				for (uint32_t i = 0; i < sizeof(Wifi.bssid); i++) {
+				  if (bssid_scan[i] != Wifi.bssid[i]) {
+					bMatch=false;
+				  }
+				}
+			}
+       		if (bMatch) {  // SSID match
+				Wifi.best_network_db = rssi_scan;
+				if (Wifi.best_network_db < -WIFI_RSSI_THRESHOLD) {
+					if (Wifi.best_network_db > -70) {
+						Wifi.best_network_db += WIFI_RSSI_THRESHOLD;
+					}
+					else {
+						Wifi.best_network_db += WIFI_RSSI_THRESHOLD-5;
+					}
+				}
+ 			   AddLog_P2(LOG_LEVEL_DEBUG, "best_network_db set to %i)", Wifi.best_network_db);
+			}
+		}        	
       for (uint32_t i = 0; i < wifi_scan_result; ++i) {
 
         String ssid_scan;
